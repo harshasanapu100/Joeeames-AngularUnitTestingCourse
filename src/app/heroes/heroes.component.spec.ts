@@ -13,7 +13,7 @@ describe('HeroesComponent', () => {
             { id: 3, name: 'SuperDude', strength: 55 },
         ];
 
-        mockHeroService = jasmine.createSpyObj(['getHeroes,', 'addHero', 'deleteHero']);
+        mockHeroService = jasmine.createSpyObj(['getHeroes', 'addHero', 'deleteHero']);
         component = new HeroesComponent(mockHeroService);
     });
 
