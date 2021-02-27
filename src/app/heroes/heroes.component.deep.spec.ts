@@ -4,7 +4,20 @@ import { HeroService } from "../hero.service";
 import { HeroesComponent } from "./heroes.component";
 import { By } from "@angular/platform-browser";
 import { HeroComponent } from "../hero/hero.component";
-import { NO_ERRORS_SCHEMA } from "@angular/core";
+import { Directive, Input } from "@angular/core";
+
+@Directive({
+    selector: '[routerLink]',
+    host: { '(click)': 'onClick()' }
+})
+export class RouterLinkDirectiveStub {
+    @Input('routerLink') linkParams: any;
+    navigatedTo: any = null;
+
+    onClick() {
+        this.navigatedTo = this.linkParams;
+    }
+}
 
 describe('HeroesComponent (deep test)', () => {
     let fixture: ComponentFixture<HeroesComponent>;
@@ -23,11 +36,12 @@ describe('HeroesComponent (deep test)', () => {
         TestBed.configureTestingModule({
             declarations: [
                 HeroesComponent,
-                HeroComponent],
+                HeroComponent,
+                RouterLinkDirectiveStub
+            ],
             providers: [
                 { provide: HeroService, useValue: mockHeroService }
             ],
-            schemas: [NO_ERRORS_SCHEMA]
         });
         fixture = TestBed.createComponent(HeroesComponent);
         component = fixture.componentInstance;
@@ -43,5 +57,30 @@ describe('HeroesComponent (deep test)', () => {
         }
     });
 
+    it('should call heroService.deleteHero when the Hero Component delete button is clicked', () => {
+        // Arrange
+        spyOn(component, 'delete');
 
+        // Act
+        const heroComponentDEs = fixture.debugElement.queryAll(By.directive(HeroComponent));
+        heroComponentDEs[1].query(By.css('button')).triggerEventHandler('click', { stopPropagation: () => { } });
+        //other ways to call
+        (<HeroComponent>heroComponentDEs[1].componentInstance).delete.emit(undefined);
+        heroComponentDEs[1].triggerEventHandler('delete', null);
+
+        // Assert
+        expect(component.delete).toHaveBeenCalledWith(HEROES[1]);
+    });
+
+    it('should have the correct route for the first hero', () => {
+        // Arrange
+        const heroComponents = fixture.debugElement.queryAll(By.directive(HeroComponent));
+        const routerLink = heroComponents[1].query(By.directive(RouterLinkDirectiveStub)).injector.get(RouterLinkDirectiveStub);
+
+        // Act
+        heroComponents[1].query(By.css('a')).triggerEventHandler('click', null);
+
+        // Assert
+        expect(routerLink.navigatedTo).toEqual('/detail/2');
+    });
 });
